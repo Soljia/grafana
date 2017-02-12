@@ -113,7 +113,7 @@ curl -i -XPOST "http://$INFLUXIP/query" --data-urlencode "q=CREATE DATABASE $DAT
 
 # Create SystemD file
 echo -e "\e[36mCreating SystemD file \e[0m"
-sudo bash -c "cat >/lib/systemd/system/driveteps.service" <<EOF >/dev/null 2>&1
+sudo bash -c "cat >/lib/systemd/system/drivetemps.service" <<EOF >/dev/null 2>&1
 [Unit]
 Description=Drive Temps
 Requires=influxdb.service
@@ -164,7 +164,7 @@ DATABASE=${DATABASE}
 Host=${HOST}
 
 # Drives being montiroed
-DRIVES=${DRIVES}
+DRIVES="${DRIVES}"
 DOF
 
 # Set Chmod
