@@ -4,15 +4,13 @@
 #It gets all CPU Cores via ssh and then passes the count to a while loop meaning no multiple lines per CPU
 #Memory is collected via ESXCFG-Info --Hardware
 
-#Modified by /u/imaspecialorder & /u/dantho & /u/DXM765 & /u/just_insane & /u/tylerhammer
+#Modified by /u/imaspecialorder & /u/dantho & /u/DXM765 & /u/just_insane & /u/tylerhammer & /u/soljia
 
 #Config File Location
 
 
-#Get the Core Count via SSH
-corecount=$(sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -t $ROOT@$ESXIP "grep -c ^processor /proc/cpuinfo" 2> /dev/null)
-corecount=$(echo $corecount | sed 's/\r$//')
-
+#Get the Core Count via SNMP (previously SSH)
+corecount=snmpwalk -m ALL -c public -v 2c $ESXIP 1.3.6.1.2.1.25.3.3.1.2 | wc -l
 
 #Prepare to start the loop and warn the user
 echo "Press [CTRL+C] to stop..."
@@ -39,10 +37,6 @@ do
         #Lets try to find the lines we are looking for
         while read -r line; do
                 #Check if we have the line we are looking for
-                if [[ $line == *"Kernel Memory"* ]]
-                then
-                  kmemline=$line
-                fi
                 if [[ $line == *"-Free."* ]]
                 then
                   freememline=$line
@@ -51,22 +45,20 @@ do
         done <<< "$hwinfo"
 
         #Remove the long string of .s
-        kmemline=$(echo $kmemline | tr -s '[.]')
         freememline=$(echo $freememline | tr -s '[.]')
 
         #Lets parse out the memory values from the strings
         #First split on the only remaining . in the strings
 IFS='.' read -ra kmemarr <<< "$kmemline"
-        kmem=${kmemarr[1]}
         IFS='.' read -ra freememarr <<< "$freememline"
         freemem=${freememarr[1]}
         #Now break it apart on the space
 		 IFS=' ' read -ra kmemarr <<< "$kmem"
-        kmem=${kmemarr[0]}
         IFS=' ' read -ra freememarr <<< "$freemem"
         freemem=${freememarr[0]}
 
         #Now we can finally calculate used percentage
+	kmem = snmpwalk -m ALL -c public -v 2c $ESXIP hrMemorySize | grep -oP '\d+\w+(?=\sKBytes$)'
         used=$((kmem - freemem))
         used=$((used * 100))
         pcent=$((used / kmem))
