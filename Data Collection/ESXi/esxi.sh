@@ -10,7 +10,7 @@
 
 
 #Get the Core Count via SNMP (previously SSH)
-corecount=snmpwalk -m ALL -c public -v 2c $ESXIP 1.3.6.1.2.1.25.3.3.1.2 | wc -l
+corecount=$(snmpwalk -m ALL -c public -v 2c $ESXIP 1.3.6.1.2.1.25.3.3.1.2 | wc -l)
 
 #Prepare to start the loop and warn the user
 echo "Press [CTRL+C] to stop..."
@@ -58,7 +58,7 @@ IFS='.' read -ra kmemarr <<< "$kmemline"
         freemem=${freememarr[0]}
 
         #Now we can finally calculate used percentage
-	kmem = snmpwalk -m ALL -c public -v 2c $ESXIP hrMemorySize | grep -oP '\d+\w+(?=\sKBytes$)'
+	kmem=$(snmpwalk -m ALL -c public -v 2c $ESXIP hrMemorySize | grep -oP '\d+\w+(?=\sKBytes$)')
         used=$((kmem - freemem))
         used=$((used * 100))
         pcent=$((used / kmem))
